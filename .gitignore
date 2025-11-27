@@ -12,7 +12,6 @@ build
 
 # Misc
 .DS_Store
-.env
 .npm
 *.log
 

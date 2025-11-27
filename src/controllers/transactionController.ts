@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as transactionService from '../services/transactionService';
+import * as treasuryService from '../services/treasuryService';
 
 export const createTransaction = async (req: Request, res: Response) => {
     try {
@@ -28,6 +29,22 @@ export const getTransaction = async (req: Request, res: Response) => {
 };
 
 export const getTransactions = async (req: Request, res: Response) => {
-    const transactions = await transactionService.getAllTransactions();
-    res.json(transactions);
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+
+    const transactions = await transactionService.getAllTransactions(page, limit);
+    const treasuryBalance = await treasuryService.getBalance();
+    const totalCount = await transactionService.getTransactionCount();
+    const totalPages = Math.ceil(totalCount / limit);
+
+    res.json({
+        transactions,
+        treasuryBalance,
+        pagination: {
+            page,
+            limit,
+            totalCount,
+            totalPages
+        }
+    });
 };

@@ -43,14 +43,30 @@ export const getTransactionById = async (id: string) => {
     return await transactionRepository.findById(id);
 };
 
-export const getAllTransactions = async (page?: number, limit?: number) => {
-    return await transactionRepository.findAll(page, limit);
+export const getAllTransactions = async (
+    page?: number,
+    limit?: number,
+    searchId?: string,
+    startDate?: Date,
+    endDate?: Date,
+    status?: string
+) => {
+    return await transactionRepository.findAll(page, limit, searchId, startDate, endDate, status);
 };
 
-export const getTransactionCount = async () => {
-    return await transactionRepository.getCount();
+export const getTransactionCount = async (
+    searchId?: string,
+    startDate?: Date,
+    endDate?: Date,
+    status?: string
+) => {
+    return await transactionRepository.getCount(searchId, startDate, endDate, status);
 };
 
 export const updateTransactionStatus = async (id: string, status: string) => {
     return await transactionRepository.updateStatus(id, status);
+};
+
+export const getBeneficiaries = async () => {
+    return await transactionRepository.getUniqueBeneficiaries();
 };

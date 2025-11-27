@@ -10,6 +10,7 @@ router.post('/quotation', quotationController.getQuotation);
 router.post('/transaction', transactionController.createTransaction);
 router.get('/transaction/:id', transactionController.getTransaction);
 router.get('/transactions', transactionController.getTransactions);
+router.get('/beneficiaries', transactionController.getBeneficiaries);
 router.post('/webhook', webhookController.updateTransactionStatus);
 
 export default router;

@@ -32,9 +32,21 @@ export const getTransactions = async (req: Request, res: Response) => {
     const page = req.query.page ? parseInt(req.query.page as string) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
 
-    const transactions = await transactionService.getAllTransactions(page, limit);
+    const searchId = req.query.searchId as string | undefined;
+    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
+    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+    const status = req.query.status as string | undefined;
+
+    const transactions = await transactionService.getAllTransactions(
+        page,
+        limit,
+        searchId,
+        startDate,
+        endDate,
+        status
+    );
     const treasuryBalance = await treasuryService.getBalance();
-    const totalCount = await transactionService.getTransactionCount();
+    const totalCount = await transactionService.getTransactionCount(searchId, startDate, endDate, status);
     const totalPages = Math.ceil(totalCount / limit);
 
     res.json({
@@ -47,4 +59,14 @@ export const getTransactions = async (req: Request, res: Response) => {
             totalPages
         }
     });
+};
+
+export const getBeneficiaries = async (req: Request, res: Response) => {
+    try {
+        const beneficiaries = await transactionService.getBeneficiaries();
+        res.json(beneficiaries);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: (error as Error).message });
+    }
 };

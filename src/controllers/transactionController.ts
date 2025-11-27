@@ -16,3 +16,18 @@ export const createTransaction = async (req: Request, res: Response) => {
         res.status(500).json({ error: (error as Error).message });
     }
 };
+export const getTransaction = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const transaction = await transactionService.getTransactionById(id);
+
+    if (!transaction) {
+        return res.status(404).json({ error: 'Transaction not found' });
+    }
+
+    res.json(transaction);
+};
+
+export const getTransactions = async (req: Request, res: Response) => {
+    const transactions = await transactionService.getAllTransactions();
+    res.json(transactions);
+};

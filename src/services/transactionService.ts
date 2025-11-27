@@ -30,3 +30,32 @@ export const createTransaction = async (quoteId: string, senderId: string, bankD
         provider: quote.provider
     };
 };
+
+export const getTransactionById = async (id: string) => {
+    const res = await query('SELECT * FROM transactions WHERE id = $1', [id]);
+    return res.rows[0];
+};
+
+export const getAllTransactions = async () => {
+    const res = await query('SELECT * FROM transactions ORDER BY created_at DESC');
+    return res.rows;
+};
+
+export const updateTransactionStatus = async (id: string, status: string) => {
+    const res = await query('UPDATE transactions SET status = $1 WHERE id = $2 RETURNING *', [status, id]);
+    if (res.rows.length === 0) return null;
+    return res.rows[0];
+};
+
+const simulatePayout = async (transactionId: string) => {
+    setTimeout(async () => {
+        try {
+            console.log(`[Simulation] Payout started for ${transactionId}`);
+            await query("UPDATE transactions SET status = 'COMPLETED' WHERE id = $1", [transactionId]);
+            console.log(`[Simulation] Payout completed for ${transactionId}`);
+        } catch (error) {
+            console.error('Payout simulation failed', error);
+        }
+    }, 5000);
+};
+

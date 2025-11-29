@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { transactionRepository } from '../repositories/transactionRepository';
+import { ledgerRepository } from '../repositories/ledgerRepository';
 import * as quoteService from './quoteService';
 import * as treasuryService from './treasuryService';
 
@@ -22,12 +23,23 @@ export const createTransaction = async (quoteId: string, senderId: string, bankD
 
     await transactionRepository.create({
         id: transactionId,
-        quoteId: quoteId,
-        senderId: senderId,
-        amountUsd: amountUsd,
+        quoteId,
+        senderId,
+        amountUsd,
         amountInr: parseFloat(quote.amountInr.toString()),
         status: 'PENDING',
-        bankDetails: bankDetails
+        bankDetails
+    });
+
+    await ledgerRepository.createEntry({
+        transactionId,
+        eventType: 'QUOTE_LOCKED',
+        entityType: 'TREASURY',
+        entityId: '1',
+        entryType: 'DEBIT',
+        amount: amountUsd,
+        currency: 'USD',
+        balanceAfter: await treasuryService.getBalance()
     });
 
     return {
@@ -64,7 +76,48 @@ export const getTransactionCount = async (
 };
 
 export const updateTransactionStatus = async (id: string, status: string) => {
-    return await transactionRepository.updateStatus(id, status);
+    const transaction = await transactionRepository.findById(id);
+    if (!transaction) {
+        throw new Error('Transaction not found');
+    }
+
+    const result = await transactionRepository.updateStatus(id, status);
+    if (status === 'PROCESSING') {
+        await ledgerRepository.createEntry({
+            transactionId: id,
+            eventType: 'PAYOUT_INITIATED',
+            entityType: 'BENEFICIARY',
+            entityId: transaction.bankDetails?.AccountNumber || 'unknown',
+            entryType: 'CREDIT',
+            amount: parseFloat(transaction.amountInr.toString()),
+            currency: 'INR',
+            balanceAfter: null
+        });
+    } else if (status === 'COMPLETED') {
+        await ledgerRepository.createEntry({
+            transactionId: id,
+            eventType: 'PAYOUT_COMPLETED',
+            entityType: 'BENEFICIARY',
+            entityId: transaction.bankDetails?.AccountNumber || transaction.bankDetails?.accountNumber || 'unknown',
+            entryType: 'CREDIT',
+            amount: parseFloat(transaction.amountInr.toString()),
+            currency: 'INR',
+            balanceAfter: null
+        });
+    } else if (status === 'FAILED') {
+        // Refund to treasury
+        await ledgerRepository.createEntry({
+            transactionId: id,
+            eventType: 'TRANSACTION_FAILED',
+            entityType: 'TREASURY',
+            entityId: '1',
+            entryType: 'CREDIT',
+            amount: parseFloat(transaction.amountUsd.toString()),
+            currency: 'USD',
+            balanceAfter: await treasuryService.getBalance()
+        });
+    }
+    return result;
 };
 
 export const getBeneficiaries = async () => {

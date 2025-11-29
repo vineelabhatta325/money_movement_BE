@@ -1,72 +1,58 @@
 import { Request, Response } from 'express';
 import * as transactionService from '../services/transactionService';
 import * as treasuryService from '../services/treasuryService';
+import { ValidationError } from '../utils/AppError';
+import { asyncWrapper } from '../utils/asyncWrapper';
 
-export const createTransaction = async (req: Request, res: Response) => {
-    try {
-        const { quoteId, senderId, bankDetails } = req.body;
+export const createTransaction = asyncWrapper(async (req: Request, res: Response) => {
+    const { quoteId, senderId, bankDetails } = req.body;
 
-        if (!quoteId || !senderId || !bankDetails) {
-            return res.status(400).json({ error: 'Missing required fields: quoteId, senderId, bankDetails' });
-        }
-
-        const transaction = await transactionService.createTransaction(quoteId, senderId, bankDetails);
-        res.status(201).json(transaction);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: (error as Error).message });
+    if (!quoteId || !senderId || !bankDetails) {
+        throw new ValidationError('Missing required fields');
     }
-};
-export const getTransaction = async (req: Request, res: Response) => {
+
+    const result = await transactionService.createTransaction(quoteId, senderId, bankDetails);
+    res.json(result);
+});
+
+export const getTransaction = asyncWrapper(async (req: Request, res: Response) => {
     const { id } = req.params;
     const transaction = await transactionService.getTransactionById(id);
 
     if (!transaction) {
-        return res.status(404).json({ error: 'Transaction not found' });
+        throw new ValidationError('Transaction not found');
     }
 
     res.json(transaction);
-};
+});
 
-export const getTransactions = async (req: Request, res: Response) => {
-    const page = req.query.page ? parseInt(req.query.page as string) : 1;
-    const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-
-    const searchId = req.query.searchId as string | undefined;
+export const getTransactions = asyncWrapper(async (req: Request, res: Response) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const searchId = req.query.searchId as string;
     const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
     const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
-    const status = req.query.status as string | undefined;
+    const status = req.query.status as string;
 
     const transactions = await transactionService.getAllTransactions(
-        page,
-        limit,
-        searchId,
-        startDate,
-        endDate,
-        status
+        page, limit, searchId, startDate, endDate, status
     );
-    const treasuryBalance = await treasuryService.getBalance();
     const totalCount = await transactionService.getTransactionCount(searchId, startDate, endDate, status);
-    const totalPages = Math.ceil(totalCount / limit);
+    const treasuryBalance = await treasuryService.getBalance();
 
     res.json({
         transactions,
         treasuryBalance,
         pagination: {
-            page,
-            limit,
+            currentPage: page,
+            totalPages: Math.ceil(totalCount / limit),
             totalCount,
-            totalPages
+            limit
         }
     });
-};
+});
 
-export const getBeneficiaries = async (req: Request, res: Response) => {
-    try {
-        const beneficiaries = await transactionService.getBeneficiaries();
-        res.json(beneficiaries);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: (error as Error).message });
-    }
-};
+export const getBeneficiaries = asyncWrapper(async (req: Request, res: Response) => {
+    const beneficiaries = await transactionService.getBeneficiaries();
+    res.json(beneficiaries);
+});

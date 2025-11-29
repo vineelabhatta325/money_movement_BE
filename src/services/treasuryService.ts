@@ -16,9 +16,9 @@ export const deductFunds = async (amount: number): Promise<boolean> => {
     const result = await treasuryRepo
         .createQueryBuilder()
         .update(Treasury)
-        .set({ balanceUsd: () => `balance_usd - ${amount}` })
-        .where('id = :id', { id: 1 })
-        .andWhere('balance_usd >= :amount', { amount })
+        .set({ balanceUsd: () => `"BalanceUsd" - ${amount}` })
+        .where('"Id" = :id', { id: 1 })
+        .andWhere('"BalanceUsd" >= :amount', { amount })
         .execute();
 
     return result.affected !== undefined && result.affected > 0;

@@ -1,18 +1,18 @@
 import { Entity, PrimaryGeneratedColumn, Column, UpdateDateColumn } from 'typeorm';
 
-@Entity('treasury')
+@Entity('Treasury')
 export class Treasury {
-    @PrimaryGeneratedColumn()
+    @PrimaryGeneratedColumn({ name: 'Id' })
     id!: number;
 
     @Column({
-        type: 'decimal', precision: 15, scale: 2, name: 'balance_usd', transformer: {
+        type: 'decimal', precision: 15, scale: 2, name: 'BalanceUsd', transformer: {
             to: (value: number) => value,
             from: (value: string) => parseFloat(value)
         }
     })
     balanceUsd!: number;
 
-    @UpdateDateColumn({ name: 'updated_at' })
+    @UpdateDateColumn({ name: 'UpdatedAt' })
     updatedAt!: Date;
 }

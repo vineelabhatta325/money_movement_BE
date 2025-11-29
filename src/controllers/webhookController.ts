@@ -1,22 +1,15 @@
-
 import { Request, Response } from 'express';
 import * as transactionService from '../services/transactionService';
+import { ValidationError } from '../utils/AppError';
+import { asyncWrapper } from '../utils/asyncWrapper';
 
-export const updateTransactionStatus = (req: Request, res: Response) => {
+export const updateTransactionStatus = asyncWrapper(async (req: Request, res: Response) => {
     const { transactionId, status } = req.body;
 
     if (!transactionId || !status) {
-        return res.status(400).json({ error: 'Missing transactionId or status' });
+        throw new ValidationError('Missing transaction ID or status');
     }
 
-    const updatedTransaction = transactionService.updateTransactionStatus(transactionId, status);
-
-    if (!updatedTransaction) {
-        return res.status(404).json({ error: 'Transaction not found' });
-    }
-
-    res.json({ message: 'Transaction updated successfully', transaction: updatedTransaction });
-};
-
-
-
+    const result = await transactionService.updateTransactionStatus(transactionId, status);
+    res.json(result);
+});

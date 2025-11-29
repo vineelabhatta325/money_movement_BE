@@ -101,8 +101,13 @@ export class TransactionRepository {
             .getMany();
         const uniqueBeneficiaries = new Map();
         transactions.forEach(t => {
-            if (t.bankDetails && t.bankDetails.accountNumber) {
-                uniqueBeneficiaries.set(t.bankDetails.accountNumber, t.bankDetails);
+            if (t.bankDetails && (t.bankDetails.AccountNumber || t.bankDetails.accountNumber)) {
+                const accountNumber = t.bankDetails.AccountNumber || t.bankDetails.accountNumber;
+                uniqueBeneficiaries.set(accountNumber, {
+                    accountHolderName: t.bankDetails.AccountHolderName || t.bankDetails.accountHolder,
+                    accountNumber: accountNumber,
+                    ifscCode: t.bankDetails.IfscCode || t.bankDetails.ifsc
+                });
             }
         });
 

@@ -1,19 +1,19 @@
 import { Entity, PrimaryColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Quote } from './Quote';
 
-@Entity('transactions')
+@Entity('Transactions')
 export class Transaction {
-    @PrimaryColumn({ type: 'varchar', length: 50 })
+    @PrimaryColumn({ type: 'varchar', length: 50, name: 'Id' })
     id!: string;
 
-    @Column({ type: 'varchar', length: 50, name: 'quote_id', nullable: true })
+    @Column({ type: 'varchar', length: 50, nullable: true, name: 'QuoteId' })
     quoteId!: string | null;
 
-    @Column({ type: 'varchar', length: 50, name: 'sender_id' })
+    @Column({ type: 'varchar', length: 50, name: 'SenderId' })
     senderId!: string;
 
     @Column({
-        type: 'decimal', precision: 15, scale: 2, name: 'amount_usd', transformer: {
+        type: 'decimal', precision: 15, scale: 2, name: 'AmountUsd', transformer: {
             to: (value: number) => value,
             from: (value: string) => parseFloat(value)
         }
@@ -21,23 +21,23 @@ export class Transaction {
     amountUsd!: number;
 
     @Column({
-        type: 'decimal', precision: 15, scale: 2, name: 'amount_inr', transformer: {
+        type: 'decimal', precision: 15, scale: 2, name: 'AmountInr', transformer: {
             to: (value: number) => value,
             from: (value: string) => parseFloat(value)
         }
     })
     amountInr!: number;
 
-    @Column({ type: 'varchar', length: 20, default: 'PENDING' })
+    @Column({ type: 'varchar', length: 20, default: 'PENDING', name: 'Status' })
     status!: string;
 
-    @Column({ type: 'jsonb', name: 'bank_details' })
+    @Column({ type: 'jsonb', name: 'BankDetails' })
     bankDetails!: any;
 
-    @CreateDateColumn({ name: 'created_at' })
+    @CreateDateColumn({ name: 'CreatedAt' })
     createdAt!: Date;
 
     @ManyToOne(() => Quote, quote => quote.transactions)
-    @JoinColumn({ name: 'quote_id' })
+    @JoinColumn({ name: 'QuoteId' })
     quote!: Quote;
 }

@@ -3,6 +3,8 @@ import { createConnection, Connection } from 'typeorm';
 import { Treasury } from './entities/Treasury';
 import { Quote } from './entities/Quote';
 import { Transaction } from './entities/Transaction';
+import { User } from './entities/User';
+import { LedgerEntry } from './entities/LedgerEntry';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -14,9 +16,9 @@ export const initializeDatabase = async (): Promise<Connection> => {
         connection = await createConnection({
             type: 'postgres',
             url: process.env.DATABASE_URL,
-            synchronize: false,
+            synchronize: true,
             logging: false,
-            entities: [Treasury, Quote, Transaction],
+            entities: [Treasury, Quote, Transaction, User, LedgerEntry],
         });
     }
     return connection;

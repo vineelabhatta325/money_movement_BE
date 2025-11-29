@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import app from './app';
 import { initializeDatabase, getConnection } from './data-source';
+import logger from './utils/logger';
 
 dotenv.config();
 
@@ -9,17 +10,17 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
     try {
         await initializeDatabase();
-        console.log('Connected to database via TypeORM');
+        logger.info('Connected to database via TypeORM');
 
         const server = app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
+            logger.info(`Server is running on port ${PORT}`);
         });
 
         const shutdown = async () => {
-            console.log('Shutting down server...');
+            logger.info('Shutting down server...');
             await getConnection().close();
             server.close(() => {
-                console.log('Server closed');
+                logger.info('Server closed');
                 process.exit(0);
             });
         };
@@ -27,7 +28,7 @@ const startServer = async () => {
         process.on('SIGTERM', shutdown);
         process.on('SIGINT', shutdown);
     } catch (error) {
-        console.error('Failed to start server:', error);
+        logger.error(error, 'Failed to start server');
         process.exit(1);
     }
 };

@@ -3,20 +3,21 @@ import { transactionRepository } from '../repositories/transactionRepository';
 import { ledgerRepository } from '../repositories/ledgerRepository';
 import * as quoteService from './quoteService';
 import * as treasuryService from './treasuryService';
+import { NotFoundError, ValidationError, BusinessRuleError } from '../utils/AppError';
 
 export const createTransaction = async (quoteId: string, senderId: string, bankDetails: any) => {
     const quote = await quoteService.getQuoteById(quoteId);
     if (!quote) {
-        throw new Error('Quote not found');
+        throw new NotFoundError('Quote not found');
     }
     if (!quoteService.isValidQuote(quote)) {
-        throw new Error('Quote expired');
+        throw new ValidationError('Quote has expired');
     }
 
     const amountUsd = parseFloat(quote.amountUsd.toString());
     const deducted = await treasuryService.deductFunds(amountUsd);
     if (!deducted) {
-        throw new Error('Insufficient treasury funds');
+        throw new BusinessRuleError('Insufficient treasury funds');
     }
 
     const transactionId = `tx_${uuidv4().split('-')[0]}`;
@@ -78,7 +79,7 @@ export const getTransactionCount = async (
 export const updateTransactionStatus = async (id: string, status: string) => {
     const transaction = await transactionRepository.findById(id);
     if (!transaction) {
-        throw new Error('Transaction not found');
+        throw new NotFoundError('Transaction not found');
     }
 
     const result = await transactionRepository.updateStatus(id, status);

@@ -10,6 +10,11 @@ export const updateTransactionStatus = asyncWrapper(async (req: Request, res: Re
         throw new ValidationError('Missing transaction ID or status');
     }
 
+    const validStatuses = ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED'];
+    if (!validStatuses.includes(status)) {
+        throw new ValidationError(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+    }
+
     const result = await transactionService.updateTransactionStatus(transactionId, status);
     res.json(result);
 });
